@@ -2,6 +2,7 @@ name: Build extension
 
 # Při každém pushi do main, který mění addon, se sestaví zip,
 # vygeneruje index.json pro Blender a vše se zveřejní na GitHub Pages.
+# Ručně: Actions → Build extension (vlevo) → Run workflow (vpravo).
 
 on:
   push:
