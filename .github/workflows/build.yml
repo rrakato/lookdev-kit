@@ -1,0 +1,88 @@
+name: Build extension
+
+# Při každém pushi do main, který mění addon, se sestaví zip,
+# vygeneruje index.json pro Blender a vše se zveřejní na GitHub Pages.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Lookdev Kit/**"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  BLENDER_URL: https://download.blender.org/release/Blender4.2/blender-4.2.0-linux-x64.tar.xz
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from manifest
+        id: ver
+        run: |
+          v=$(python3 -c "import tomllib;print(tomllib.load(open('Lookdev Kit/blender_manifest.toml','rb'))['version'])")
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Blender
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: blender
+          key: ${{ env.BLENDER_URL }}
+
+      - name: Download Blender
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir blender
+          curl -sSL "$BLENDER_URL" | tar -xJ -C blender --strip-components=1
+
+      - name: System libraries
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxrender1 libxi6 libxkbcommon0 libsm6 libgl1 libxxf86vm1 libxfixes3
+
+      - name: Validate and build
+        run: |
+          B="./blender/blender --background --factory-startup"
+          $B --command extension validate "Lookdev Kit"
+          mkdir -p site
+          $B --command extension build --source-dir "Lookdev Kit" \
+            --output-filepath "site/lookdev-kit-${{ steps.ver.outputs.version }}.zip"
+          $B --command extension server-generate --repo-dir site --html
+          ls -la site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${{ steps.ver.outputs.version }}"
+          gh release view "v$v" >/dev/null 2>&1 \
+            || gh release create "v$v" "site/lookdev-kit-$v.zip" --title "Lookdev Kit $v" --generate-notes
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

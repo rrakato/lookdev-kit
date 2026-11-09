@@ -1,0 +1,20 @@
+schema_version = "1.0.0"
+
+id = "lookdev_kit"
+version = "1.0.12"
+name = "Lookdev Kit"
+tagline = "Render, output, light and color tools in the N panel"
+maintainer = "Ota"
+type = "add-on"
+
+website = "https://github.com/rrakato/lookdev-kit"
+
+tags = ["3D View", "Render", "Lighting"]
+
+blender_version_min = "4.2.0"
+
+license = ["SPDX:GPL-3.0-or-later"]
+
+[permissions]
+files = "Read a custom sound file and save renders to disk"
+clipboard = "Copy the picked color as a hex code"

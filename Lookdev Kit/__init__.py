@@ -1,12 +1,4 @@
-bl_info = {
-    "name": "Lookdev Kit",
-    "author": "Ota",
-    "version": (1, 0, 11),
-    "blender": (3, 0, 0),
-    "location": "View3D > Sidebar (N) > Lookdev",
-    "description": "Render and output settings, transform tools, ray visibility, light power in EV steps, light linking, averaging color picker and a render-finished sound",
-    "category": "3D View",
-}
+# Metadata (verze, název…) jsou v blender_manifest.toml
 
 import bpy
 import aud
